@@ -160,6 +160,10 @@ module tb_cpu_branch;
                  32'h00100593,  // x11 = 1
                  32'h00B57863,
                  32'd1, "BGEU taken (max unsigned >= 1)");
+        run_case(32'h00100513,  // x10 = 1
+                 32'hFFF00593,  // x11 = -1 = 0xFFFFFFFF (max unsigned)
+                 32'h00B57863,
+                 32'd2, "BGEU not-taken (1 < max unsigned)");
 
         $display("");
         if (errors == 0) begin

@@ -23,18 +23,18 @@ module cpu #(
 
     // 取指接口（到 B 的 ifetch.v）
     output wire [31:0] next_pc,
-    output wire        pc_we,
+    output wire        pc_we,//单周期恒为1
     output wire        branch_redirect, // 1=本周期 EX 解析出控制流重定向，B 必须 flush prefetch
     input  wire [31:0] pc_out,          // 执行级 PC（与 inst_out 配对）
     input  wire [31:0] inst_out,
     input  wire [31:0] pc_fetch,        // IF 级 PC（A 用来算顺序 next_pc）
 
     // 访存接口（到 B 的 dmem.v / TopDebug 译码后的 mmio）
-    output wire [31:0] mem_addr,
-    output wire [31:0] mem_wdata,
-    output wire [3:0]  mem_be,
-    output wire        mem_we,
-    input  wire [31:0] mem_rdata,
+    output wire [31:0] mem_addr,       //Load/Store 访问地址
+    output wire [31:0] mem_wdata,      //Store 要写入的数据
+    output wire [3:0]  mem_be,         //字节写使能，SB/SH/SW 选择有效字节，一次对应 4 个字节
+    output wire        mem_we,         //写使能，只有 Store 执行时拉高
+    input  wire [31:0] mem_rdata,      //Load 读取返回的数据
 
     // Debug RegFile 读端口（只读）
     input  wire [4:0]  dbg_reg_addr,

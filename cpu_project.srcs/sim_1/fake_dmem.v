@@ -29,6 +29,10 @@ module fake_dmem #(
         if (rst_n && mem_we) begin
             if (!cpu_step) begin
                 $fatal(1, "fake_dmem: mem_we asserted while cpu_step=0");
+            end else if (idx >= MEM_SIZE) begin
+                // 越界写检测：方便发现错误的 store 地址
+                $fatal(1, "fake_dmem: write addr=0x%08h out of MEM_SIZE=%0d words",
+                       mem_addr, MEM_SIZE);
             end else begin
                 if (mem_be[0]) mem[idx][ 7: 0] <= mem_wdata[ 7: 0];
                 if (mem_be[1]) mem[idx][15: 8] <= mem_wdata[15: 8];

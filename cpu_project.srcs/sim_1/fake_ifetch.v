@@ -60,6 +60,11 @@ module fake_ifetch #(
             startup       <= 1'b1;
             pending_flush <= 1'b0;
         end else if (cpu_step) begin
+            // 越界 PC 检测：方便发现错误的 next_pc / jal/branch 目标
+            if (pc_fetch[31:2] >= MEM_SIZE) begin
+                $fatal(1, "fake_ifetch: pc_fetch=0x%08h out of MEM_SIZE=%0d words",
+                       pc_fetch, MEM_SIZE);
+            end
             startup       <= 1'b0;
             bram_dout     <= mem[pc_fetch[31:2]];   // BRAM 同步读（fall-through 已被锁存）
             pc_execute    <= pc_fetch;
