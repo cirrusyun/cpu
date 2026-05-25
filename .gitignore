@@ -1,0 +1,30 @@
+# ==========================================
+# Vivado Git Ignore List
+# ==========================================
+*.jou
+*.log
+*.str
+*.dmp
+*.pb
+*.backup.*
+.Xil/
+*.sim/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.gen/
+*.wdb
+*.vcd
+xsim.dir/
+.DS_Store
+Thumbs.db
+
+# 忽略.runs目录，但强制提交runs/impl_1下的.bit和.dcp文件
+*.runs/*
+!*.runs/impl_1/
+*.runs/impl_1/*
+!*.runs/impl_1/*.bit
+!*.runs/impl_1/*.dcp
+
+# 仿真临时
+/tmp/cpu_tb_*

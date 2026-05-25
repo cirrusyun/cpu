@@ -1,0 +1,14 @@
+// 演示用 .hex 文件（$readmemh 格式）
+// Case 0: AND 运算
+//
+// 程序：
+//   ADDI x10, x0, 0xAB     ; x10 = 171
+//   ADDI x11, x0, 0xCD     ; x11 = 205
+//   AND  x12, x10, x11     ; x12 = 0xAB & 0xCD = 0x89
+//   JAL  x0, 0             ; halt
+//
+// 期望：x12 = 0x89 (= 137 decimal)
+0ab00513
+0cd00593
+00b57633
+0000006f
