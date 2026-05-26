@@ -26,28 +26,35 @@ module ctrl (
 );
     localparam [6:0] FUNCT7_STD = 7'b0000000;
     localparam [6:0] FUNCT7_ALT = 7'b0100000;   // SUB/SRA/SRAI in RV32I
-
+    localparam [6:0] FUNCT7_MUL = 7'b0000001;
     always @(*) begin
         // defaults (NOP)
-        alu_src_a  = 2'b00;
-        alu_src_b  = 1'b0;
-        wb_src     = 2'b00;
-        reg_write  = 1'b0;
-        mem_read   = 1'b0;
-        mem_write  = 1'b0;
-        branch     = 1'b0;
-        jump       = 1'b0;
-        jalr       = 1'b0;
-        ecall_trap = 1'b0;
-        imm_type   = 3'b000;
-        mem_size   = funct3[1:0];
-        mem_signed = ~funct3[2];
-
+        alu_src_a  = 2'b00;       // 00=rs1，01=PC，10=零（供 LUI 使用）
+        alu_src_b  = 1'b0;        // 0=rs2，1=立即数 imm
+        wb_src     = 2'b00;       // 00=ALU 结果，01=Load 数据，10=PC+4
+        reg_write  = 1'b0;        // 1=将 wb_src 选择的结果写回 rd
+        mem_read   = 1'b0;        // 1=Load，从 DMem/MMIO 读取数据用于写回
+        mem_write  = 1'b0;        // 1=Store，将 rs2 数据写入 DMem/MMIO
+        branch     = 1'b0;        // 1=条件分支，CPU 继续判断是否 taken
+        jump       = 1'b0;        // 1=无条件跳转（JAL/JALR）
+        jalr       = 1'b0;        // 1=JALR，目标为 (rs1+imm)&~1；jump=1 且本位=0 为 JAL
+        ecall_trap = 1'b0;        // 1=ECALL，PC 重定向到 ECALL_HANDLER_PC
+        imm_type   = 3'b000;      // 000=I，001=S，010=B，011=U，100=J 格式立即数
+        mem_size   = funct3[1:0];// 00=字节，01=半字，10=字
+        mem_signed = ~funct3[2]; // 1=LB/LH 符号扩展，0=LBU/LHU 零扩展
         case (opcode)
             7'b0110011: begin   // R-Type
                 case (funct3)
-                    3'b000, 3'b101: begin
-                        // ADD/SUB and SRL/SRA are the only R-type pairs that use funct7[5].
+                    3'b000: begin
+                        // ADD/SUB/MUL are selected by the complete funct7 field.
+                        if (funct7 == FUNCT7_STD || funct7 == FUNCT7_ALT ||
+                            funct7 == FUNCT7_MUL) begin
+                            alu_src_a = 2'b00; alu_src_b = 1'b0;
+                            wb_src    = 2'b00; reg_write = 1'b1;
+                        end
+                    end
+                    3'b101: begin
+                        // SRL/SRA use the standard/alternate funct7 pair.
                         if (funct7 == FUNCT7_STD || funct7 == FUNCT7_ALT) begin
                             alu_src_a = 2'b00; alu_src_b = 1'b0;
                             wb_src    = 2'b00; reg_write = 1'b1;
@@ -81,7 +88,7 @@ module ctrl (
                             imm_type  = 3'b000;
                         end
                     end
-                    default: begin
+                    default: begin//对于普通 I-Type 运算：不把 inst[31:25] 当成 funct7 使用。这些位属于 12 位立即数 imm[11:0] 的高 7 位
                         alu_src_a = 2'b00; alu_src_b = 1'b1;
                         wb_src    = 2'b00; reg_write = 1'b1;
                         imm_type  = 3'b000;

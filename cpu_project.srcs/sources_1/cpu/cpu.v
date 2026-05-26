@@ -47,7 +47,7 @@ module cpu #(
     wire [2:0]  funct3   = inst[14:12];
     wire [4:0]  rs1_addr = inst[19:15];
     wire [4:0]  rs2_addr = inst[24:20];
-    wire        funct7_5 = inst[30];
+    wire [6:0]  funct7    = inst[31:25];
 
     wire [1:0]  alu_src_a;
     wire        alu_src_b;
@@ -62,7 +62,7 @@ module cpu #(
     ctrl u_ctrl (
         .opcode(opcode), .rd_addr(rd_addr),
         .funct3(funct3), .rs1_addr(rs1_addr),
-        .funct7(inst[31:25]),
+        .funct7(funct7),
         .funct12(inst[31:20]),
         .alu_src_a(alu_src_a), .alu_src_b(alu_src_b),
         .wb_src(wb_src), .reg_write(reg_write),
@@ -74,7 +74,8 @@ module cpu #(
     );
 
     alu_ctrl u_alu_ctrl (
-        .opcode(opcode), .funct3(funct3), .funct7_5(funct7_5),
+        .opcode(opcode), .funct3(funct3),
+        .funct7(funct7),
         .alu_op(alu_op)
     );
 
@@ -118,6 +119,7 @@ module cpu #(
     reg take_branch;
     always @(*) begin
         case (funct3)
+            // alu_zero = (alu_result == 32'b0)；BEQ/BNE 的 SUB 结果为 0 说明相等。
             3'b000:  take_branch =  alu_zero;       // BEQ
             3'b001:  take_branch = ~alu_zero;       // BNE
             3'b100:  take_branch =  alu_result[0];  // BLT
@@ -171,6 +173,14 @@ module cpu #(
                            : jalr                  ? pc_jalr
                            : (jump | branch_taken) ? pc_branch
                            :                         pc_plus4;
+                           //if (ecall_trap)
+                            //     next_pc = ECALL_HANDLER_PC;
+                            // else if (jalr)
+                            //     next_pc = pc_jalr;
+                            // else if (jump || branch_taken)
+                            //     next_pc = pc_branch;
+                            // else
+                            //     next_pc = pc_plus4;
     assign pc_we           = 1'b1;          // base 阶段恒 1（pipeline bonus 时按 hazard 控制）
     assign branch_redirect = jump | branch_taken | ecall_trap;   // ECALL 也要 flush prefetch
 endmodule

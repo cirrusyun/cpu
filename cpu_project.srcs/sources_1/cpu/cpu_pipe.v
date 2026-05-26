@@ -136,7 +136,6 @@ module cpu_pipe #(
     wire [4:0]  id_rs2_addr = if_id_inst[24:20];
     wire [6:0]  id_funct7   = if_id_inst[31:25];
     wire [11:0] id_funct12  = if_id_inst[31:20];
-    wire        id_funct7_5 = if_id_inst[30];
 
     wire [1:0]  id_alu_src_a;
     wire        id_alu_src_b;
@@ -178,7 +177,7 @@ module cpu_pipe #(
     );
 
     alu_ctrl u_alu_ctrl (
-        .opcode(id_opcode), .funct3(id_funct3), .funct7_5(id_funct7_5),
+        .opcode(id_opcode), .funct3(id_funct3), .funct7(id_funct7),
         .alu_op(id_alu_op)
     );
 

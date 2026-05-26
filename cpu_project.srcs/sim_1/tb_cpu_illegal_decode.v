@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
-// End-to-end regression for unsupported RV32I ALU encodings.
-// Unsupported R-type funct7 values, invalid shift-immediate imm[11:5], and
-// reserved branch funct3 values must behave as NOPs.
+// End-to-end regression for retained MUL plus unsupported ALU encodings.
+// MUL is supported; other unsupported R-type funct7 values, invalid
+// shift-immediate imm[11:5], and reserved branch funct3 values stay NOPs.
 module tb_cpu_illegal_decode;
     reg clk = 0;
     reg rst_n = 0;
@@ -63,7 +63,7 @@ module tb_cpu_illegal_decode;
     initial begin
         #1;   // 让 fake_ifetch/fake_dmem 的 time-0 NOP fill 先跑完
         u_if.mem[0] = 32'h00400293;   // ADDI x5, x0, 4
-        u_if.mem[1] = 32'h02528333;   // RV32M MUL-like encoding: invalid in RV32I, must NOP
+        u_if.mem[1] = 32'h02528333;   // MUL x6, x5, x5 -> 16 (retained M-extension instruction)
         u_if.mem[2] = 32'h405293B3;   // R-type SLL with funct7=0100000: invalid, must NOP
         u_if.mem[3] = 32'h40129413;   // SLLI with imm[11:5]=0100000: invalid, must NOP
         u_if.mem[4] = 32'hFE12D493;   // SRLI/SRAI with imm[11:5]=1111111: invalid, must NOP
@@ -77,7 +77,7 @@ module tb_cpu_illegal_decode;
         #(40 * 20);
 
         check("setup x5",                         5'd5,  32'd4);
-        check("RV32M-like R-type stays NOP",      5'd6,  32'd0);
+        check("retained MUL works",               5'd6,  32'd16);
         check("invalid R-type funct7 stays NOP",  5'd7,  32'd0);
         check("invalid SLLI imm[11:5] stays NOP", 5'd8,  32'd0);
         check("invalid SRAI imm[11:5] stays NOP", 5'd9,  32'd0);

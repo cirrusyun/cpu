@@ -1,12 +1,12 @@
 `timescale 1ns/1ps
 // ALU control unit
-//   opcode/funct3/funct7[5] -> alu_op (matches alu.v encoding)
+//   opcode/funct3/funct7 -> alu_op (matches alu.v encoding)
 //   Branch path uses SLT/SLTU/SUB explicitly (not SUB+negative) to avoid
 //   the signed-overflow trap noted in 架构 §3.
 module alu_ctrl (
     input  wire [6:0] opcode,
     input  wire [2:0] funct3,
-    input  wire       funct7_5,
+    input  wire [6:0] funct7,
     output reg  [3:0] alu_op
 );
     localparam OP_ADD  = 4'b0000;
@@ -19,12 +19,20 @@ module alu_ctrl (
     localparam OP_SRA  = 4'b0111;
     localparam OP_SLT  = 4'b1000;
     localparam OP_SLTU = 4'b1001;
-
+    localparam OP_MUL  = 4'b1011;
+    wire funct7_5 = funct7[5];
     always @(*) begin
         case (opcode)
             7'b0110011: begin   // R-Type
                 case (funct3)
-                    3'b000: alu_op = funct7_5 ? OP_SUB : OP_ADD;
+                    3'b000: begin
+                        case (funct7)
+                            7'b0000000: alu_op = OP_ADD;
+                            7'b0100000: alu_op = OP_SUB;
+                            7'b0000001: alu_op = OP_MUL;
+                            default:    alu_op = OP_ADD;
+                        endcase
+                    end
                     3'b001: alu_op = OP_SLL;
                     3'b010: alu_op = OP_SLT;
                     3'b011: alu_op = OP_SLTU;

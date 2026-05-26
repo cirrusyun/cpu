@@ -20,7 +20,7 @@ module alu (
     localparam OP_SRA  = 4'b0111;
     localparam OP_SLT  = 4'b1000;
     localparam OP_SLTU = 4'b1001;
-
+    localparam OP_MUL  = 4'b1011;
     wire signed [31:0] sa = a;
     wire signed [31:0] sb = b;
     wire        [4:0]  shamt = b[4:0];
@@ -37,6 +37,7 @@ module alu (
             OP_SRA : result = sa >>> shamt;
             OP_SLT : result = (sa < sb) ? 32'd1 : 32'd0;
             OP_SLTU: result = (a  < b ) ? 32'd1 : 32'd0;
+            OP_MUL : result = a * b;
             default: result = 32'b0;
         endcase
     end
